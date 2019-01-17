@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include templates/head.ejs %>
+</head>
+<body>
+<% include templates/nav.ejs %>
+<div class="container">
+    <form method="POST" action="/login" class="login">
+        <h4 class="text-center">Login</h4>
+        <table>
+            <tr>
+                <td>Email</td>
+                <td><input type="email" name="logemail" ></td>
+            </tr>
+            <tr>
+                <td>Password</td>
+                <td><input type="password" name="logpassword" ></td>
+            </tr>
+            <tr class="text-center" style="height: 55px;">
+                <td colspan="2"><input class="btn btn-info" type="submit" value="Login" ></td>
+            </tr>
+        </table>
+    </form>
+    <form class="register" method="POST" action="/register">
+        <h4 class="text-center">Don't have an account? Sign up!</h4>
+        <table>
+            <tr>
+                <td>Email</td>
+                <td><input type="email" name="email" ></td>
+            </tr>
+            <tr>
+                <td>Username</td>
+                <td><input type="text" name="username" ></td>
+            </tr>
+            <tr>
+                <td>Password</td>
+                <td><input type="password" name="password" ></td>
+            </tr>
+            <tr>
+                <td>Confirm password</td>
+                <td><input type="password" name="passwordConf" ></td>
+            </tr>
+            <tr class="text-center" style="height: 55px;">
+                <td colspan="2"><input class="btn btn-info" type="submit" value="Sign Up" ></td>
+            </tr>
+        </table>
+    </form>
+</div>
+</body>
+</html>
+<style>
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .login, .register {
+        margin: 20px;
+    }
+</style>

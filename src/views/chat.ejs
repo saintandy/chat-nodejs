@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<head>
+    <% include templates/head.ejs %>
+</head>
+<body>
+<% include templates/nav.ejs %>
+<div class="container" id="this-chat">
+    <div class="group-chat">
+        <h4><%= name %></h4>
+        <div id="messages-container">
+            <%for (const message of messages) {%>
+            <div class="groupchat-message">
+                <div><%= message.sender%></div>
+                <div><%= message.text%></div>
+                <div><%= moment(message.date).format('ddd MMM DD YYYY HH:mm:SS')%></div>
+            </div>
+            <%}%>
+        </div>
+        <input type="text" id="textbox" placeholder="Type a message..."></input>
+    </div>
+    <div class="users">
+        <h4>Online</h4>
+        <div id="online-users"></div>
+    </div>
+</div>
+<% include private-chats.ejs %>
+<script>
+    const chatName = <%- JSON.stringify(name) %>;
+    const userName = (<%- JSON.stringify(user) %>).username;
+    const onlineUsers = new Set();
+
+    $("#textbox").on("keydown", (event) => {
+        if (event.key === "Enter") {
+            const chatMessage = {
+                text: $("#textbox").val(),
+                chat: chatName,
+                isPrivate: false,
+            };
+            $.post("http://localhost:3020/send-message", chatMessage);
+            $("#textbox").val("");
+        }
+    })
+
+    $(document).ready(() => {
+        socket.on("groupchat-" + chatName, message => {
+            $("#messages-container").append(`
+                <div class="groupchat-message">
+                  <div>${message.sender}</div>
+                  <div>${message.text}</div>
+                  <div>${new Date(message.date).toString().split(' ').slice(0,5).join(' ')}</div>
+                </div>`
+            );
+            const messagesBox = $("#messages-container")[0];
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+        })
+
+        setInterval(() => {
+            socket.emit("heartbeat-groupchat", {
+                chatname: chatName,
+                username: userName,
+            });
+        }, 300);
+
+        setInterval(() => {
+            $("#online-users").html("");
+            for (const user of Array.from(onlineUsers).sort()) {
+                $("#online-users").append(`
+                    <span class="user-from-list" onclick="openPrivateChat('${user}')">${user}</span>`
+                );
+            }
+            onlineUsers.clear();
+        }, 2000);
+
+        socket.on("heartbeat-gc-" + chatName, (username) => {
+            onlineUsers.add(username);
+        });
+    });
+
+</script>
+<style>
+    #online-users {
+        padding-left: 5px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    .user-from-list {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+    }
+    .groupchat-message {
+        color: black;
+        max-width: 100%;
+        position: relative;
+        font-size: 75%;
+        margin: 6px;
+        border-radius: 10px;
+        padding: 4px;
+        border: 1px solid transparent;
+    }
+    .groupchat-message>:first-child {
+        font-weight: bold;
+        font-size: 110%;
+    }
+    .groupchat-message>:nth-child(2) {
+        color: black;
+        font-size: 115%;
+        white-space: initial
+    }
+    .groupchat-message>:nth-child(3) {
+        color: rgba(140, 140, 140, 0.8);
+        text-align: right;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+    .group-chat {
+        width: 70%;
+        display: inline-flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .users {
+        width: 30%;
+        display: inline-block;
+        vertical-align: top;
+    }
+    #this-chat {
+        height: 80vh;
+        white-space: nowrap;
+    }
+    #textbox {
+        background: white;
+        padding: 4px;
+        font-size: 80%;
+        width: 100%;
+    }
+    #messages-container {
+        flex: 1;
+        overflow: auto;
+    }
+</style>

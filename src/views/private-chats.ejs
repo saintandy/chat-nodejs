@@ -1,0 +1,170 @@
+<div id="private-chats"><div style="flex: 1;"></div></div>
+<%if (user) {%>
+    <script>
+        const activeChats = new Set();
+        socket.on("privatechat-" + (<%- JSON.stringify(user) %>)._id, (event) => {
+            console.log("I receive something", event);
+            if (event.messages) {
+                if (!activeChats.has(event.username)) {
+                    createChat(event.username, event.messages);
+                }
+            } else {
+                if (activeChats.has(event.username)) {
+                    addMessage(event.username, event.message);
+                } else {
+                    $.get("http://localhost:3020/privatechat?name=" + event.username);
+                }
+            }
+        });
+
+        const createChat = (username, messages = []) => {
+            const chatDomElement = $("<div></div>").attr("id", username + "-chat").attr("class", "chatbox");
+            chatDomElement.append(`
+                <div class="chatbox-username">${username}</div>
+                <button class="chatbox-close" onclick="closeChat('${username}')">×</button>
+                <div class="chatbox-messages" id="${username}-messages">
+                    ${messages.map(message =>
+                        `<div class="chatbox-message ${message.sender == username ? "" : "self"}">
+                          <div>${message.sender}</div>
+                          <div>${message.text}</div>
+                          <div>${message.date.split('T')[1].slice(0,5)}</div>
+                        </div>`).join('')
+                    }
+                </div>
+                <input class="chatbox-input" type="text" placeholder="Type a message..." id="${username}-input">
+            `);
+            $("#private-chats").append(chatDomElement);
+            activeChats.add(username);
+            $("#" + username + "-input").on("keydown", (event) => {
+                if (event.key === "Enter") {
+                    sendprivatemessage(username);
+                }
+            })
+        }
+
+        const addMessage = (username, message) => {
+            $("#" + username + "-messages").append(
+                `<div class="chatbox-message ${message.sender == username ? "" : "self"}">
+                  <div>${message.sender}</div>
+                  <div>${message.text}</div>
+                  <div>${message.date.split('T')[1].slice(0,5)}</div>
+                </div>`
+            );
+            const messagesBox = $("#" + username + "-messages")[0];
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+        }
+
+        const closeChat = username => {
+            if (activeChats.has(username)) {
+                activeChats.delete(username);
+                $("#"+username+"-chat").remove();
+            }
+        }
+
+        const sendprivatemessage = username => {
+            const message = $("#" + username + "-input").val();
+            if (message && message !== "") {
+                $.post("http://localhost:3020/send-message", {
+                    isPrivate: true,
+                    text: message,
+                    receiverName: username,
+                });
+            }
+            $("#" + username + "-input").val("")
+        }
+
+        const openPrivateChat = username => {
+            $.get("http://localhost:3020/privatechat?name=" + username);
+        }
+    </script>
+<%} else {%>
+<script>
+    const openPrivateChat = () => {};
+</script>
+<%}%>
+<style>
+    .chatbox-message {
+        background: #5a5a5a;
+        color: white;
+        max-width: 75%;
+        font-size: 75%;
+        margin: 6px;
+        border-radius: 10px;
+        padding: 4px;
+        border: 1px solid transparent;
+        width: fit-content;
+    }
+    .chatbox-message.self {
+        margin-left: auto;
+        background: #f1f1f1;
+    }
+    .chatbox-message>:first-child {
+        font-weight: bold;
+    }
+    .chatbox-message.self>:first-child {
+        display: none;
+    }
+    .chatbox-message.self>:nth-child(2) {
+        color: black;
+    }
+    .chatbox-message>:nth-child(2) {
+        white-space: initial;
+    }
+    .chatbox-message>:nth-child(3) {
+        color: rgba(255,255,255,.8);
+    }
+    .chatbox-message.self>:nth-child(3) {
+        color: rgba(140, 140, 140, 0.8);
+        text-align: right;
+    }
+    .chatbox-username {
+        padding: 6px;
+        color: white;
+    }
+    .chatbox-close {
+        position: absolute;
+        right: 0;
+        top: 0;
+        font-size: 20px;
+        color: rgba(255,255,255,.5);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+    }
+    .chatbox-messages {
+        flex: 1;
+        overflow: auto;
+        background: white;
+    }
+    .chatbox-input {
+        background: white;
+        padding: 4px;
+        font-size: 80%;
+        width: 100%;
+    }
+    .chatbox-send {
+        background: white;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+    }
+    #private-chats {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        white-space: nowrap;
+        overflow: auto;
+        display: flex;
+    }
+    .chatbox {
+        margin-left: auto;
+        display: inline-flex;
+        flex-direction: column;
+        height: 330px;
+        min-width: 250px;
+        margin: 0 10px;
+        box-shadow: 0 0 2px;
+        background: black;
+        position: relative;
+    }
+</style>

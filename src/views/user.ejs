@@ -1,0 +1,17 @@
+<div>
+    <span style="background: #da2020;" id="dot<%=username%>" class="onlinedot"></span>
+    <span style="font-weight: bold; cursor: pointer;" onclick="openPrivateChat('<%=username%>')"><%= username %></span>
+</div>
+
+
+<script>
+    document[<%- JSON.stringify(username) %> + "offline"] = true;
+    setInterval(() => {
+        $("#dot" + <%- JSON.stringify(username) %>).css("background-color", document[<%- JSON.stringify(username) %> + "offline"] ? "#da2020" : "#3eca83");
+        document[<%- JSON.stringify(username) %> + "offline"] = true;
+    }, 500);
+
+    socket.on("heartbeat-" + <%- JSON.stringify(username) %>, () => {
+        document[<%- JSON.stringify(username) %> + "offline"] = false;
+    });
+</script>

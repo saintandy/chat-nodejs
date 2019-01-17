@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<head>
+    <% include templates/head.ejs %>
+</head>
+<body>
+<% include templates/nav.ejs %>
+<div class="container">
+    <div class="rooms">
+        <h4>Rooms</h4>
+        <div class="rooms-list">
+            <%for (const room of rooms) {%>
+                <div>
+                    <%- link_to(room.name.replace("groupchat-",""), `/groupchat?name=${room.name.replace("groupchat-","")}`) %>
+                    <div>Added by <b><%=room.owner%></b></div>
+                </div>
+            <%}%>
+        </div>
+        <%if (user) {%>
+        <form method="POST" action="/create-room">
+            <td>Create a new room:</td>
+            <td><input type="text" name="name" placeholder="Type room name..."></td>
+            <td colspan="2"><input style="display: inline-block;" class="btn btn-sm btn-success" type="submit" value="Create" ></td>
+        </form>
+        <%}%>
+    </div>
+    <div class="users">
+        <h4>Users</h4>
+        <div class="users-list">
+            <%for (const user of users) {%>
+                <%- include('user', {username: user.username}); %>
+            <%}%>
+        </div>
+    </div>
+</div>
+</body>
+<% include private-chats.ejs %>
+<style>
+    .container {
+        white-space: nowrap;
+    }
+    .users {
+        width: 30%;
+        display: inline-block;
+        white-space: nowrap;
+        padding-left: 30px;
+        vertical-align: top;
+    }
+    .users-list {
+        max-height: 550px;
+        overflow: auto;
+        margin: 10px 0;
+    }
+    .onlinedot {
+        width: 10px;
+        height: 10px;
+        border-radius: 100%;
+        display: inline-block;
+    }
+    .rooms {
+        width: 70%;
+        display: inline-block;
+        white-space: nowrap;
+    }
+    .rooms-list {
+        max-height: 500px;
+        overflow: auto;
+        margin: 10px 0;
+        border-top: 1px solid rgba(0,0,0,.1);
+        border-bottom: 1px solid rgba(0,0,0,.1);
+    }
+    .rooms-list>* {
+        position: relative;
+    }
+    .rooms-list>*>:first-child {
+        width: 100%;
+        height: 100%;
+        display: block;
+        padding: 10px;
+    }
+    .rooms-list>*>:first-child:hover {
+        background: rgba(0,0,0,.1);
+    }
+    .rooms-list>*>:nth-child(2) {
+        position: absolute;
+        margin-right: 10px;
+        top: 10px;
+        right: 10px;
+        pointer-events: none;
+    }
+</style>
